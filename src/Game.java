@@ -27,21 +27,21 @@ public class Game {
         hm.put("大王", 17);
     }
 
+    ArrayList<String> player1 = new ArrayList<>();
+    ArrayList<String> player2 = new ArrayList<>();
+    ArrayList<String> player3 = new ArrayList<>();
+    ArrayList<String> dipai = new ArrayList<>();
+
     public Game() {
 
         Collections.shuffle(list);
-
-        ArrayList<String> player1 = new ArrayList<>();
-        ArrayList<String> player2 = new ArrayList<>();
-        ArrayList<String> player3 = new ArrayList<>();
-        ArrayList<String> lord = new ArrayList<>();
 
         for (int i = 0; i < list.size(); i++) {
 
             String serial = list.get(i);
 
             if (i <= 2) {
-                lord.add(serial);
+                dipai.add(serial);
                 continue;
             }
 
@@ -57,12 +57,12 @@ public class Game {
         order(player1);
         order(player2);
         order(player3);
-        order(lord);
+        order(dipai);
 
         lookPoker("Player 1", player1);
         lookPoker("Player 2", player2);
         lookPoker("Player 3", player3);
-        lookPoker("Lord", lord);
+        lookPoker("Lord", dipai);
     }
 
     public void lookPoker(String player, ArrayList<String> list) {
