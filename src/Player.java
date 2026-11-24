@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.util.*;
 
 
@@ -7,7 +8,7 @@ public class Player {
 
     public Player(String name) {
         this.name = name;
-        this.hand = new ArrayList<String>();
+        this.hand = new ArrayList<>();
     }
 
     public String getName() {
@@ -18,8 +19,8 @@ public class Player {
         this.name = name;
     }
 
-    public ArrayList<String> getHand() {
-        return hand;
+    public List<String> getHand() {
+        return Collections.unmodifiableList(hand);
     }
 
     public void addCard(String card) {
@@ -59,5 +60,8 @@ public class Player {
         return removedCards;
     }
 
+    public void sortHand(Comparator<String> comparator) {
+        hand.sort(comparator);
+    }
 
 }

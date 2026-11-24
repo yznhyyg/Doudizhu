@@ -39,14 +39,16 @@ public class Game {
         }
     }
 
-    Scanner scanner = new Scanner(System.in);
-    static HashMap<String, Integer> cardValues = new HashMap<>();
-    private ArrayList<String> deck = new ArrayList<>();
+    private final Scanner scanner = new Scanner(System.in);
+    private static final Map<String, Integer> cardValues = new HashMap<>();
+    private final List<String> deck = new ArrayList<>();
     private int landlordIndex;
     private int currentPlayerIndex;
     private List<String> lastPlayedCards = new ArrayList<>();
     private int lastPlayerIndex = -1;
     private int passCount = 0;
+    private final List<Player> players = new ArrayList<>();
+    private final ArrayList<String> dipai = new ArrayList<>();
 
     static {
 
@@ -92,10 +94,12 @@ public class Game {
     }
 
     private void sortHands() {
-        order(players.get(0).getHand());
-        order(players.get(1).getHand());
-        order(players.get(2).getHand());
-        order(dipai);
+        Comparator<String> comparator = createCardComparator();
+        for (Player player : players) {
+            player.sortHand(comparator);
+        }
+
+        dipai.sort(comparator);
     }
 
     private void showHands() {
@@ -108,11 +112,7 @@ public class Game {
         players.get(landlordIndex).addCards(dipai);
     }
 
-    private ArrayList<Player> players = new ArrayList<>();
-
-    ArrayList<String> dipai = new ArrayList<>();
-
-    public void lookPoker(String player, ArrayList<String> list) {
+    public void lookPoker(String player, List<String> list) {
         System.out.println(player + ":");
 
         for (String serial : list) {
@@ -121,21 +121,19 @@ public class Game {
         System.out.println();
     }
 
-    public void order(ArrayList<String> list) {
-        Collections.sort(list, new Comparator<String>() {
-            @Override
-            public int compare(String o1, String o2) {
+    private Comparator<String> createCardComparator() {
 
-                String color1 = o1.substring(0, 1);
-                int value1 = getValue(o1);
-                int value2 = getValue(o2);
-                String color2 = o2.substring(0, 1);
+        return
+                (o1, o2) -> {
+                    String color1 = o1.substring(0, 1);
+                    int value1 = getValue(o1);
+                    int value2 = getValue(o2);
+                    String color2 = o2.substring(0, 1);
 
-                int i = value1 - value2;
+                    int i = value1 - value2;
 
-                return i == 0 ? color1.compareTo(color2) : i;
-            }
-        });
+                    return i == 0 ? color1.compareTo(color2) : i;
+                };
     }
 
     public int getValue(String poker) {
@@ -330,7 +328,7 @@ public class Game {
         giveBottomCards();
         currentPlayerIndex = landlordIndex;
 
-        order(players.get(landlordIndex).getHand());
+        players.get(landlordIndex).sortHand(createCardComparator());
 
         showHands();
         lookPoker("Lord", dipai);
