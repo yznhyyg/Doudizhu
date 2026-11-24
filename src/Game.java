@@ -3,65 +3,103 @@ import java.util.*;
 
 public class Game {
 
-    static HashMap<String, Integer> hm = new HashMap<>();
-    static ArrayList<String> list = new ArrayList<>();
+    Scanner scanner = new Scanner(System.in);
+    static HashMap<String, Integer> cardValues = new HashMap<>();
+    private ArrayList<String> deck = new ArrayList<>();
+    private int landlordIndex;
 
     static {
+
+        cardValues.put("J", 11);
+        cardValues.put("Q", 12);
+        cardValues.put("K", 13);
+        cardValues.put("A", 14);
+        cardValues.put("2", 15);
+        cardValues.put("小王", 16);
+        cardValues.put("大王", 17);
+    }
+
+    private void initPlayers() {
+        players.add(new Player("Player 1"));
+        players.add(new Player("Player 2"));
+        players.add(new Player("Player 3"));
+    }
+    private void initDeck() {
         String[] color = {"♠", "♥", "♣", "♦"};
         String[] number = {"3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2"};
 
         for (String n : number) {
             for (String c : color) {
-                list.add(c + n);
+                deck.add(c + n);
             }
         }
-        list.add(" 小王");
-        list.add(" 大王");
-
-        hm.put("J", 11);
-        hm.put("Q", 12);
-        hm.put("K", 13);
-        hm.put("A", 14);
-        hm.put("2", 15);
-        hm.put("小王", 16);
-        hm.put("大王", 17);
+        deck.add(" 小王");
+        deck.add(" 大王");
     }
 
-    ArrayList<String> player1 = new ArrayList<>();
-    ArrayList<String> player2 = new ArrayList<>();
-    ArrayList<String> player3 = new ArrayList<>();
-    ArrayList<String> dipai = new ArrayList<>();
+    private void dealCards(){
+        for (int i = 0; i < deck.size(); i++) {
 
-    public Game() {
-
-        Collections.shuffle(list);
-
-        for (int i = 0; i < list.size(); i++) {
-
-            String serial = list.get(i);
+            String serial = deck.get(i);
 
             if (i <= 2) {
                 dipai.add(serial);
                 continue;
             }
-
-            if (i % 3 == 0) {
-                player1.add(serial);
-            } else if (i % 3 == 1) {
-                player2.add(serial);
-            } else {
-                player3.add(serial);
-            }
+            players.get(i % 3).addCard(serial);
         }
+    }
 
-        order(player1);
-        order(player2);
-        order(player3);
+    private void sortHands(){
+        order(players.get(0).getHand());
+        order(players.get(1).getHand());
+        order(players.get(2).getHand());
         order(dipai);
+    }
 
-        lookPoker("Player 1", player1);
-        lookPoker("Player 2", player2);
-        lookPoker("Player 3", player3);
+    private void showHands(){
+        lookPoker("Player 1", players.get(0).getHand());
+        lookPoker("Player 2", players.get(1).getHand());
+        lookPoker("Player 3", players.get(2).getHand());
+    }
+
+    private void giveBottomCards() {
+        players.get(landlordIndex).addCards(dipai);
+    }
+
+    private ArrayList<Player> players = new ArrayList<>();
+
+    ArrayList<String> dipai = new ArrayList<>();
+
+    public Game() {
+
+        initPlayers();
+
+        initDeck();
+        do {
+            Collections.shuffle(deck);
+
+            for (Player player : players) {
+                player.clearHand();
+            }
+            dipai.clear();
+
+            dealCards();
+            sortHands();
+            showHands();
+
+            landlordIndex = callLandlord();
+
+            if (landlordIndex == -1) {
+                System.out.println("本轮无人叫地主，重新发牌");
+            }
+        } while (landlordIndex == -1);
+
+        giveBottomCards();
+
+        order(players.get(landlordIndex).getHand());
+
+        showHands();
         lookPoker("Lord", dipai);
     }
 
@@ -74,7 +112,7 @@ public class Game {
         System.out.println();
     }
 
-    public void order(ArrayList<String> list){
+    public void order(ArrayList<String> list) {
         Collections.sort(list, new Comparator<String>() {
             @Override
             public int compare(String o1, String o2) {
@@ -91,12 +129,54 @@ public class Game {
         });
     }
 
-    public int getValue(String poker){
+    public int getValue(String poker) {
         String number = poker.substring(1);
-        if(hm.containsKey(number)){
-            return hm.get(number);
-        }else{
+        if (cardValues.containsKey(number)) {
+            return cardValues.get(number);
+        } else {
             return Integer.parseInt(number);
         }
+    }
+
+    public int callLandlord() {
+        int maxBid = 0;
+        int winnerIndex = -1;
+
+        for (int i = 0; i < 3; i++) {
+            System.out.println("玩家" + (i + 1) + "叫地主，请输入叫分：");
+            int bid;
+
+            while (true) {
+                if (!scanner.hasNextInt()) {
+                    System.out.println("请输入数字");
+                    scanner.next();
+                    continue;
+                }
+                bid = scanner.nextInt();
+                if ((bid <= maxBid && bid != 0) || bid > 3) {
+                    System.out.println("请输入正确的叫分");
+                    continue;
+                }
+                break;
+            }
+
+            if (bid == 3) {
+                System.out.println("玩家" + (i + 1) + "是地主");
+                return i;
+            }
+
+            if (bid > maxBid) {
+                maxBid = bid;
+                winnerIndex = i;
+            }
+        }
+
+        if (maxBid == 0) {
+            return -1;
+        }
+
+        System.out.println("玩家" + (winnerIndex + 1) + "是地主");
+
+        return winnerIndex;
     }
 }
