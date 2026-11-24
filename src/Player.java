@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Player {
     private String name;
-    private ArrayList<String> hand;
+    private final List<String> hand;
 
     public Player(String name) {
         this.name = name;
@@ -24,10 +24,23 @@ public class Player {
     }
 
     public void addCard(String card) {
+        Objects.requireNonNull(card, "Card cannot be null");
+        if (card.isBlank()) {
+            throw new IllegalArgumentException("Card cannot be blank");
+        }
         hand.add(card);
     }
 
-    public void addCards(ArrayList<String> cards) {
+    public void addCards(List<String> cards) {
+        Objects.requireNonNull(cards, "Cards cannot be null");
+        for (String card : cards) {
+            Objects.requireNonNull(card, "Cards cannot contain null");
+
+            if (card.isBlank()) {
+                throw new IllegalArgumentException("Cards cannot contain blank values");
+            }
+        }
+
         hand.addAll(cards);
     }
 
@@ -45,6 +58,9 @@ public class Player {
         List<String> removedCards = new ArrayList<>();
 
         for(int index : indexes){
+            if (index < 0 || index >= hand.size()) {
+                throw new IllegalArgumentException("Invalid index: " + index);
+            }
             if (checkedIndexes.add(index)) {
                 removedCards.add(hand.get(index));
             }
