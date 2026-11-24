@@ -8,7 +8,7 @@ public class Game {
     private ArrayList<String> deck = new ArrayList<>();
     private int landlordIndex;
     private int currentPlayerIndex;
-    private String lastPlayedCard;
+    private List<String> lastPlayedCards = new ArrayList<>();
     private int lastPlayerIndex = -1;
     private int passCount = 0;
 
@@ -153,21 +153,47 @@ public class Game {
         return winnerIndex;
     }
 
-    private String playCard(Player player) {
+    private List<String> playCards(Player player) {
         lookPoker(player.getName(), player.getHand());
-        System.out.println(player.getName() + "，请选择要打出的牌序号：");
+
         while (true) {
-            if (!scanner.hasNextInt()) {
+
+            System.out.println(player.getName() + "，请选择要打出的牌序号：");
+
+            String line = scanner.nextLine().trim();
+
+            if (line.isEmpty()) {
                 System.out.println("请输入数字");
-                scanner.next();
                 continue;
             }
-            int index = scanner.nextInt();
-            if (index < 1 || index > player.getHand().size()) {
-                System.out.println("请输入正确的数字");
+
+            String[] parts = line.split("\\s+");
+
+            int[] indexes = new int[parts.length];
+            boolean valid = true;
+
+            for (int i = 0; i < parts.length; i++) {
+
+                try {
+                    indexes[i] = Integer.parseInt(parts[i]) - 1;
+                } catch (NumberFormatException e) {
+                    System.out.println("请输入正确的数字");
+                    valid = false;
+                    break;
+                }
+
+                if (indexes[i] < 0 || indexes[i] >= player.getHand().size()) {
+                    System.out.println("序号超出范围，请重新输入");
+                    valid = false;
+                    break;
+                }
+            }
+
+            if (!valid) {
                 continue;
             }
-            return player.removeCard(index - 1);
+
+            return player.removeCards(indexes);
         }
     }
 
@@ -188,7 +214,7 @@ public class Game {
         }
     }
     private boolean handlePlay(Player player){
-        lastPlayedCard = playCard(player);
+        lastPlayedCards = playCards(player);
         if (player.getHand().isEmpty()) {
             return true;
         }
@@ -201,7 +227,7 @@ public class Game {
 
         Player player = players.get(currentPlayerIndex);
 
-        if (lastPlayedCard == null) {
+        if (lastPlayedCards.isEmpty()) {
             return handlePlay(player);
         }
 
@@ -210,7 +236,7 @@ public class Game {
             passCount++;
             if (passCount == 2) {
                 currentPlayerIndex = lastPlayerIndex;
-                lastPlayedCard = null;
+                lastPlayedCards = new ArrayList<>();
                 passCount = 0;
             } else {
                 nextPlayer();

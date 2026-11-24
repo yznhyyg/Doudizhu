@@ -1,4 +1,5 @@
-import java.util.ArrayList;
+import java.util.*;
+
 
 public class Player {
     private String name;
@@ -33,11 +34,29 @@ public class Player {
         hand.clear();
     }
 
-    public String removeCard(int index){
-        if(index >= 0 && index < hand.size()){
-            return hand.remove(index);
+    public List<String> removeCards(int...indexes){
+
+        if (indexes == null || indexes.length == 0) {
+            throw new IllegalArgumentException("Indexes cannot be empty");
         }
-        throw new IndexOutOfBoundsException("Invalid index");
+
+        Set<Integer> checkedIndexes = new HashSet<>();
+        List<String> removedCards = new ArrayList<>();
+
+        for(int index : indexes){
+            if (checkedIndexes.add(index)) {
+                removedCards.add(hand.get(index));
+            }
+        }
+
+        List<Integer> sortedIndexes = new ArrayList<>(checkedIndexes);
+        sortedIndexes.sort(Collections.reverseOrder());
+
+        for (int index : sortedIndexes) {
+            hand.remove(index);
+        }
+
+        return removedCards;
     }
 
 
