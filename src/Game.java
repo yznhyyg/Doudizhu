@@ -7,6 +7,10 @@ public class Game {
     static HashMap<String, Integer> cardValues = new HashMap<>();
     private ArrayList<String> deck = new ArrayList<>();
     private int landlordIndex;
+    private int currentPlayerIndex;
+    private String lastPlayedCard;
+    private int lastPlayerIndex = -1;
+    private int passCount = 0;
 
     static {
 
@@ -24,6 +28,7 @@ public class Game {
         players.add(new Player("Player 2"));
         players.add(new Player("Player 3"));
     }
+
     private void initDeck() {
         String[] color = {"♠", "♥", "♣", "♦"};
         String[] number = {"3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2"};
@@ -37,7 +42,7 @@ public class Game {
         deck.add(" 大王");
     }
 
-    private void dealCards(){
+    private void dealCards() {
         for (int i = 0; i < deck.size(); i++) {
 
             String serial = deck.get(i);
@@ -50,14 +55,14 @@ public class Game {
         }
     }
 
-    private void sortHands(){
+    private void sortHands() {
         order(players.get(0).getHand());
         order(players.get(1).getHand());
         order(players.get(2).getHand());
         order(dipai);
     }
 
-    private void showHands(){
+    private void showHands() {
         lookPoker("Player 1", players.get(0).getHand());
         lookPoker("Player 2", players.get(1).getHand());
         lookPoker("Player 3", players.get(2).getHand());
@@ -70,38 +75,6 @@ public class Game {
     private ArrayList<Player> players = new ArrayList<>();
 
     ArrayList<String> dipai = new ArrayList<>();
-
-    public Game() {
-
-        initPlayers();
-
-        initDeck();
-        do {
-            Collections.shuffle(deck);
-
-            for (Player player : players) {
-                player.clearHand();
-            }
-            dipai.clear();
-
-            dealCards();
-            sortHands();
-            showHands();
-
-            landlordIndex = callLandlord();
-
-            if (landlordIndex == -1) {
-                System.out.println("本轮无人叫地主，重新发牌");
-            }
-        } while (landlordIndex == -1);
-
-        giveBottomCards();
-
-        order(players.get(landlordIndex).getHand());
-
-        showHands();
-        lookPoker("Lord", dipai);
-    }
 
     public void lookPoker(String player, ArrayList<String> list) {
         System.out.println(player + ":");
@@ -178,5 +151,122 @@ public class Game {
         System.out.println("玩家" + (winnerIndex + 1) + "是地主");
 
         return winnerIndex;
+    }
+
+    private String playCard(Player player) {
+        lookPoker(player.getName(), player.getHand());
+        System.out.println(player.getName() + "，请选择要打出的牌序号：");
+        while (true) {
+            if (!scanner.hasNextInt()) {
+                System.out.println("请输入数字");
+                scanner.next();
+                continue;
+            }
+            int index = scanner.nextInt();
+            if (index < 1 || index > player.getHand().size()) {
+                System.out.println("请输入正确的数字");
+                continue;
+            }
+            return player.removeCard(index - 1);
+        }
+    }
+
+    private boolean choosePass(Player player) {
+        System.out.println(player.getName() + "，是否选择不要（输入-1表示不要，输入1表示要）");
+        while (true) {
+            if (!scanner.hasNextInt()) {
+                System.out.println("请输入数字");
+                scanner.next();
+                continue;
+            }
+            int choice = scanner.nextInt();
+            if (choice != -1 && choice != 1) {
+                System.out.println("请输入正确的数字");
+                continue;
+            }
+            return choice == -1;
+        }
+    }
+    private boolean handlePlay(Player player){
+        lastPlayedCard = playCard(player);
+        if (player.getHand().isEmpty()) {
+            return true;
+        }
+        lastPlayerIndex = currentPlayerIndex;
+        passCount = 0;
+        nextPlayer();
+        return false;
+    }
+    private boolean playTurn() {
+
+        Player player = players.get(currentPlayerIndex);
+
+        if (lastPlayedCard == null) {
+            return handlePlay(player);
+        }
+
+        boolean pass = choosePass(player);
+        if (pass) {
+            passCount++;
+            if (passCount == 2) {
+                currentPlayerIndex = lastPlayerIndex;
+                lastPlayedCard = null;
+                passCount = 0;
+            } else {
+                nextPlayer();
+            }
+        } else {
+            return handlePlay(player);
+        }
+        return false;
+    }
+
+    private void nextPlayer() {
+        currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
+    }
+
+    public void startGame() {
+        System.out.println("游戏开始！");
+        while (true) {
+            if (playTurn()) {
+                System.out.println(players.get(currentPlayerIndex).getName() + " 获胜！");
+                break;
+            }
+        }
+    }
+
+    public Game() {
+
+        initPlayers();
+
+        initDeck();
+        do {
+            Collections.shuffle(deck);
+
+            for (Player player : players) {
+                player.clearHand();
+            }
+            dipai.clear();
+
+            dealCards();
+            sortHands();
+            showHands();
+
+            landlordIndex = callLandlord();
+
+            if (landlordIndex == -1) {
+                System.out.println("本轮无人叫地主，重新发牌");
+            }
+        } while (landlordIndex == -1);
+
+        giveBottomCards();
+        currentPlayerIndex = landlordIndex;
+
+        order(players.get(landlordIndex).getHand());
+
+        showHands();
+        lookPoker("Lord", dipai);
+
+        startGame();
     }
 }

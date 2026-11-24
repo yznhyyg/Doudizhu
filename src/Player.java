@@ -33,4 +33,12 @@ public class Player {
         hand.clear();
     }
 
+    public String removeCard(int index){
+        if(index >= 0 && index < hand.size()){
+            return hand.remove(index);
+        }
+        throw new IndexOutOfBoundsException("Invalid index");
+    }
+
+
 }
